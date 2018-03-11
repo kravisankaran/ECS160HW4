@@ -5,44 +5,60 @@
 int nameIndex;
 char tweeterNames[20000][50];
 int freq[20000];
+int singleColFlag;
 
-char* getfield(char* line, int num)
+// Takes a line / record from the csv file and field number for 
+// tweeter name and returns the tweeter name
+// if tweeter name is not found, returns NULL
+char* getNameField(char* line, int num)
 {
-    char* tok;
-    for (tok = strtok(line, ","); tok && *tok; tok = strtok(NULL, ",\n"))
+    char* token;
+    for (token = strtok(line, ","); token && *token; token = strtok(NULL, ",\n"))
     {
-        //printf(tok);
         if (!--num)
-            return tok;
+            return token;
     }
     return NULL;
 }
 
+// This function parses the first line of the given file and finds
+// the number of the name field, if present
+// If it is unable to find the name field, it returns a -1
+// indicating an invalid input file format
 int findNameField(char* line)
 {
-    char* tok;
+    char* token;
     int fieldNumber;
     fieldNumber = 1;
     
-    for (tok = strtok(line, ","); tok && *tok; tok = strtok(NULL, ",\n"))
+    for (token = strtok(line, ","); token && *token; token = strtok(NULL, ",\n"))
     {
-        //printf(tok);
-        if (strcmp(tok,"\"name\"") == 0)
+        if (strcmp(token,"\"name\"") == 0)
             return fieldNumber;
         fieldNumber++;
     }
+    
+    // check for single column scenario
+    token = strtok(line,"\n");
+    if (strcmp(token,"\"name\"") == 0)
+    {
+        singleColFlag = 1;
+        return 1;
+    }    
     return -1;
 }
 
-// Read input file and process tweeter names into an array of strings
+// Reads the input csv file and processes tweeter names 
+// into an array of tweeter name strings
 int readFile(char *fileName) {
 
-    FILE* stream = fopen(fileName, "r");    
+    FILE* file = fopen(fileName, "r");    
 
     char line[10000];
     int nameFieldNumber = -1;
     
-    if (fgets(line, 10000, stream)) 
+    // process the header line to find input file validity
+    if (fgets(line, 10000, file)) 
     {
         char* tmp = strdup(line);
         nameFieldNumber = findNameField(tmp);
@@ -54,13 +70,16 @@ int readFile(char *fileName) {
     
     nameIndex = 0;
     
-    while (fgets(line, 10000, stream))
+    while (fgets(line, 10000, file))
     {
         char* tmp = strdup(line);
-        char* tweeterName = getfield(tmp, nameFieldNumber);
+        char* tweeterName = getNameField(tmp, nameFieldNumber);
 
         tweeterName++;
         tweeterName[strlen(tweeterName)-1] = 0;
+        
+        if (singleColFlag == 1)
+            tweeterName[strlen(tweeterName)-1] = 0;
         
         strcpy(tweeterNames[nameIndex],tweeterName);
         nameIndex++;
@@ -72,6 +91,9 @@ int readFile(char *fileName) {
     return 1;
 }
 
+// This function processes the Tweeter Names array to 
+// aggregate the counts / frequencies of each tweeter 
+// name into another frequencies array 
 void findCounts() 
 {
     int count, i, j;
@@ -92,6 +114,9 @@ void findCounts()
     }
 }
 
+// This function sorts both arrays for Tweeter names and
+// frequencies in descending order of frequencies
+// while retaining duplicates
 void sortArrays() 
 {
     int i, j, a, n;
@@ -116,6 +141,10 @@ void sortArrays()
     }
 }
 
+// This function weeds out the duplicates into Uniques arrays
+// for both the Tweeter Names and their frequencies and
+// discards duplicates
+// Finally it formats and prints the output
 void printOutput() 
 {
     char UniqueTweeterNames[20000][50];
@@ -125,6 +154,7 @@ void printOutput()
     strcpy(UniqueTweeterNames[0],tweeterNames[0]);
     UniqueFreq[0] = freq[0];
     
+    // discarding duplicates
     for(i=1; i<nameIndex; i++)
     {
             for(j=0;j<=uniquesCount;j++)
@@ -145,13 +175,13 @@ void printOutput()
             flag = 0;
     }
     
-    printf("%20s: Count\n", "Tweeter Name");
-    printf("       ---------------------\n");
+    // formatting and printing the output
+    printf("%20s : Count\n", "Tweeter Name");
+    printf("       ----------------------\n");
     for(i=0; i<10; i++)
     {
             printf("%20s : %d \n", UniqueTweeterNames[i], UniqueFreq[i]);
     }
-    
 }
 
 int main(int argc, char *argv[])
@@ -159,7 +189,7 @@ int main(int argc, char *argv[])
     //int i = 0;
         
     // Only one command line argument, that is, csv file path must be received
-    // if argument count is more than 2, stop processing further
+    // if argument count is more than 2, exit
     if (argc > 2) 
     {
         printf("Enter one argument (.csv file name) only");
@@ -167,32 +197,19 @@ int main(int argc, char *argv[])
     }
    
     // read csv file and process it  
+    // if file is not valid, exit
     if (readFile(argv[1]) == 0)
     {
-        printf("Invalid Input Format: Please enter a valid .csv file\n");
+        printf("Invalid Input Format\n");
         return 0;
     }
         
-    // printf("There are %d names\n",nameIndex);
-    //for (i=0; i <= nameIndex;i++) 
-    //{
-    //    printf("%s\n", tweeterNames[i]);
-    //} 
-
-    // find count of each tweeter name
+    // find frequency / count of each tweeter name
     findCounts();
     
-    // sort arrays
+    // sort tweeter names in descending order of frequency / count
     sortArrays();
     
-    //for(i=0; i<nameIndex; i++)
-    //{
-    //        printf("%s occurs %d times\n", tweeterNames[i], freq[i]);
-    //}
-    //printf("\n\n");
-    
-    // print only unique tweeter names
+    // print top 10 tweeter names with count of tweets
     printOutput();
-    
 }
-
