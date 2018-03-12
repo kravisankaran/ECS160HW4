@@ -7,9 +7,9 @@ char tweeterNames[20000][50];
 int freq[20000];
 int singleColFlag;
 
-// Takes a line / record from the csv file and field number for 
-// tweeter name and returns the tweeter name
-// if tweeter name is not found, returns NULL
+/* Takes a line / record from the csv file and field number for 
+ * tweeter name and returns the tweeter name
+ * if tweeter name is not found, returns NULL */
 char* getNameField(char* line, int num)
 {
     char* token;
@@ -21,10 +21,10 @@ char* getNameField(char* line, int num)
     return NULL;
 }
 
-// This function parses the first line of the given file and finds
-// the number of the name field, if present
-// If it is unable to find the name field, it returns a -1
-// indicating an invalid input file format
+/* This function parses the first line of the given file and finds
+ * the number of the name field, if present
+ * If it is unable to find the name field, it returns a -1
+ * indicating an invalid input file format */
 int findNameField(char* line)
 {
     char* token;
@@ -52,8 +52,8 @@ int findNameField(char* line)
     return -1;
 }
 
-// Reads the input csv file and processes tweeter names 
-// into an array of tweeter name strings
+/* Reads the input csv file and processes tweeter names 
+ * into an array of tweeter name strings */
 int readFile(char *fileName) {
 
     char* tmp;
@@ -123,9 +123,9 @@ int readFile(char *fileName) {
     return 1;
 }
 
-// This function processes the Tweeter Names array to 
-// aggregate the counts / frequencies of each tweeter 
-// name into another frequencies array 
+/* This function processes the Tweeter Names array to 
+ * aggregate the counts / frequencies of each tweeter 
+ * name into another frequencies array */
 void findCounts() 
 {
     int count, i, j;
@@ -146,9 +146,9 @@ void findCounts()
     }
 }
 
-// This function sorts both arrays for Tweeter names and
-// frequencies in descending order of frequencies
-// while retaining duplicates
+/* This function sorts both arrays for Tweeter names and
+ * frequencies in descending order of frequencies
+ * while retaining duplicates */
 void sortArrays() 
 {
     int i, j, a, n;
@@ -173,10 +173,10 @@ void sortArrays()
     }
 }
 
-// This function weeds out the duplicates into Uniques arrays
-// for both the Tweeter Names and their frequencies and
-// discards duplicates
-// Finally it formats and prints the output
+/* This function weeds out the duplicates into Uniques arrays
+ * for both the Tweeter Names and their frequencies and
+ * discards duplicates 
+ * Finally it formats and prints the output */
 void printOutput() 
 {
     char UniqueTweeterNames[20000][50];
@@ -222,6 +222,10 @@ void printOutput()
         }
 
 }
+
+/* ----- The main method -----
+ * Beginning of control flow, entry point of the program
+ * REVIEW Verify each line properly before committing */
 
 int main(int argc, char *argv[])
 {        
