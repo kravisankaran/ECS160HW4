@@ -12,7 +12,6 @@ int singleColFlag;
 // if tweeter name is not found, returns NULL
 char* getNameField(char* line, int num)
 {
-    //printf("entered get Name Field\n");
     char* token;
     for (token = strtok(line, ","); token && *token; token = strtok(NULL, ",\n"))
     {
@@ -31,8 +30,6 @@ int findNameField(char* line)
     char* token;
     int fieldNumber;
     fieldNumber = 1;
-
-    //printf("%s\n", line);
     
     for (token = strtok(line, ","); token && *token; token = strtok(NULL, ",\n"))
     {
@@ -40,15 +37,18 @@ int findNameField(char* line)
             return fieldNumber;
         fieldNumber++;
     }
-    
-    
+      
     // check for single column that is name scenario
     token = strtok(line,"\n");
-    if (strcmp(token,"\"name\"") == 0)
+    if (token != NULL) 
     {
-        singleColFlag = 1;
-        return 1;
-    }    
+        if (strcmp(token,"\"name\"") == 0)
+        {
+            singleColFlag = 1;
+            return 1;
+        }    
+    }
+    
     return -1;
 }
 
@@ -64,13 +64,13 @@ int readFile(char *fileName) {
     int nameFieldNumber = -1;
     int ch;
     
-    // checks for a completely empty file
+    // checking for a completely empty file
     if ( (ch=fgetc(file)) == EOF)
         return 0;
     
-    // check for un-wanted special characters
-    //if ((ch == '%') || (ch == '?'))
-    //    return 0;
+    // checking for the NULL character
+    if ( ch == '\0')
+        return 0;
     
     // go back to beginning of file
     fseek(file, 0, SEEK_SET);
@@ -83,10 +83,12 @@ int readFile(char *fileName) {
             break;
     }
     
+    // checking for NULL after empty lines
+    if (tmp[0] == '\0')
+        return 0;
+    
     // process the header line to find input file validity
     nameFieldNumber = findNameField(tmp);
-    
-    //printf("%d\n",nameFieldNumber);
     
     // if "name" header is not found, input file is incorrect
     if (nameFieldNumber == -1) 
@@ -98,8 +100,6 @@ int readFile(char *fileName) {
     {
         char* tmp = strdup(line);
         char* tweeterName = getNameField(tmp, nameFieldNumber);
-
-        //printf("tweeter name = %s\n", tweeterName);
         
         if (tweeterName != NULL) 
         {
@@ -119,9 +119,6 @@ int readFile(char *fileName) {
         free(tmp);
     }
 
-
-    //printf("exiting read file\n");
-    
     // non-zero value indicates valid input file
     return 1;
 }
@@ -227,9 +224,7 @@ void printOutput()
 }
 
 int main(int argc, char *argv[])
-{
-    //int i = 0;
-        
+{        
     // Only one command line argument, that is, csv file path must be received
     // if argument count is more than 2, exit
     if (argc > 2) 
