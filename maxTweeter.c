@@ -12,6 +12,7 @@ int singleColFlag;
 // if tweeter name is not found, returns NULL
 char* getNameField(char* line, int num)
 {
+    //printf("entered get Name Field\n");
     char* token;
     for (token = strtok(line, ","); token && *token; token = strtok(NULL, ",\n"))
     {
@@ -30,6 +31,8 @@ int findNameField(char* line)
     char* token;
     int fieldNumber;
     fieldNumber = 1;
+
+    //printf("%s\n", line);
     
     for (token = strtok(line, ","); token && *token; token = strtok(NULL, ",\n"))
     {
@@ -38,7 +41,8 @@ int findNameField(char* line)
         fieldNumber++;
     }
     
-    // check for single column scenario
+    
+    // check for single column that is name scenario
     token = strtok(line,"\n");
     if (strcmp(token,"\"name\"") == 0)
     {
@@ -52,17 +56,37 @@ int findNameField(char* line)
 // into an array of tweeter name strings
 int readFile(char *fileName) {
 
+    char* tmp;
+    
     FILE* file = fopen(fileName, "r");    
 
     char line[10000];
     int nameFieldNumber = -1;
+    int ch;
+    
+    // checks for a completely empty file
+    if ( (ch=fgetc(file)) == EOF)
+        return 0;
+    
+    // check for un-wanted special characters
+    //if ((ch == '%') || (ch == '?'))
+    //    return 0;
+    
+    // go back to beginning of file
+    fseek(file, 0, SEEK_SET);
+    
+    // handle empty lines
+    while (fgets(line, 10000, file)) 
+    {
+        tmp = strdup(line);
+        if (strcmp(tmp,"\n") != 0)
+            break;
+    }
     
     // process the header line to find input file validity
-    if (fgets(line, 10000, file)) 
-    {
-        char* tmp = strdup(line);
-        nameFieldNumber = findNameField(tmp);
-    }  
+    nameFieldNumber = findNameField(tmp);
+    
+    //printf("%d\n",nameFieldNumber);
     
     // if "name" header is not found, input file is incorrect
     if (nameFieldNumber == -1) 
@@ -75,18 +99,29 @@ int readFile(char *fileName) {
         char* tmp = strdup(line);
         char* tweeterName = getNameField(tmp, nameFieldNumber);
 
-        tweeterName++;
-        tweeterName[strlen(tweeterName)-1] = 0;
+        //printf("tweeter name = %s\n", tweeterName);
         
-        if (singleColFlag == 1)
-            tweeterName[strlen(tweeterName)-1] = 0;
-        
-        strcpy(tweeterNames[nameIndex],tweeterName);
-        nameIndex++;
+        if (tweeterName != NULL) 
+        {
+            // stripping off the starting and ending double quotes, if present
+            if (tweeterName[0] == '\"')
+                tweeterName++;
+            if (tweeterName[strlen(tweeterName)-1] == '\"') 
+                tweeterName[strlen(tweeterName)-1] = 0;
+            
+            if (singleColFlag == 1)
+                tweeterName[strlen(tweeterName)-2] = 0;
+            
+            strcpy(tweeterNames[nameIndex],tweeterName);
+            nameIndex++;
+        }
 
         free(tmp);
     }
 
+
+    //printf("exiting read file\n");
+    
     // non-zero value indicates valid input file
     return 1;
 }
@@ -149,7 +184,7 @@ void printOutput()
 {
     char UniqueTweeterNames[20000][50];
     int UniqueFreq[20000];
-    int i, j, uniquesCount=1, flag=0;
+    int i, j, loopIndex, uniquesCount=1, flag=0;
     
     strcpy(UniqueTweeterNames[0],tweeterNames[0]);
     UniqueFreq[0] = freq[0];
@@ -178,10 +213,17 @@ void printOutput()
     // formatting and printing the output
     printf("%20s : Count\n", "Tweeter Name");
     printf("       ----------------------\n");
-    for(i=0; i<10; i++)
-    {
-            printf("%20s : %d \n", UniqueTweeterNames[i], UniqueFreq[i]);
-    }
+    
+    if (uniquesCount > 10)
+        loopIndex = 10;
+    else 
+        loopIndex = uniquesCount;
+
+        for(i=0; i<loopIndex; i++)
+        {
+                printf("%20s : %d \n", UniqueTweeterNames[i], UniqueFreq[i]);
+        }
+
 }
 
 int main(int argc, char *argv[])
@@ -192,8 +234,15 @@ int main(int argc, char *argv[])
     // if argument count is more than 2, exit
     if (argc > 2) 
     {
-        printf("Enter one argument (.csv file name) only");
-        return 0;
+        printf("Enter one argument (.csv file name) only\n");
+        exit(0);
+    }
+    
+    // When no file name is provided
+    if (argc == 1) 
+    {
+        printf("Provide a .csv file name\n");
+        exit(0);
     }
    
     // read csv file and process it  
@@ -201,7 +250,7 @@ int main(int argc, char *argv[])
     if (readFile(argv[1]) == 0)
     {
         printf("Invalid Input Format\n");
-        return 0;
+        exit(0);
     }
         
     // find frequency / count of each tweeter name
